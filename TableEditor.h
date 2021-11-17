@@ -46,6 +46,12 @@ public:
 
 	void sortByValue(string col_name, bool asc);
 
+	int findFirstOf(string value, string col_name);
+	int findLastOf(string value, string col_name);
+
+	int countValues(string value, string col_name);
+	int countDistinctValues(string col_name);
+
 	// obrisati
 	void printSelected();
 

@@ -141,8 +141,7 @@ string TableEditor::exportTable() {
 			i++;
 		}
 		table.push_back('\n');
-	}	
-	table.push_back('\n');
+	}
 
 	return table;
 }
@@ -270,7 +269,7 @@ void TableEditor::insertColumn(string col_name, Type type) {
 			break;
 		case Type::TEXT:
 			t = 't';
-			data = " ";
+			data = "";
 			break;
 	}
 
@@ -582,34 +581,6 @@ void TableEditor::sortByValue(string col_name, bool asc) {
 			current = current->next;
 			if (swapped == 0) break;
 		}
-
-
-	/*
-	void sort(Elem * head) {
-		int swapped;
-		Elem* p = head;
-		while (1) {
-			swapped = 0;
-			for (Elem* s = p->next; s; s = s->next) {
-				if (compare(p->hotel, s->hotel)) {
-					Hotel tmp = p->hotel;
-					p->hotel = s->hotel;
-					s->hotel = tmp;
-					swapped = 1;
-				}
-			}
-			p = p->next;
-			if (swapped == 0) break;
-		}
-	}
-	*/
-
-
-
-
-
-	// menja se redosled redova
-	// this->firstRow = newFirstRow;
 }
 
 
@@ -656,4 +627,97 @@ bool TableEditor::compareVals(string v1, string v2, bool numeric,bool asc) {
 			else return false;
 		}
 	}
+}
+
+
+
+
+// prvo pojavljivanje value u koloni
+int TableEditor::findFirstOf(string value, string col_name) {
+	int rowNum = 0;
+	int colNum = this->columns->findColNum(col_name);
+	for (Rows* temp = this->firstRow; temp != nullptr; temp = temp->next) {
+		if (temp->row->getColumnValue(colNum) == value) {
+			return rowNum;
+		}
+		rowNum++;
+	}
+	// trebalo bi da je dovoljno
+	if (rowNum) return -2;
+}
+
+
+// Zadnje pojavljivanje value u koloni
+int TableEditor::findLastOf(string value, string col_name) {
+	int lastRowNum = 0;
+	int rowNum = 0;
+	int colNum = this->columns->findColNum(col_name);
+	for (Rows* temp = this->firstRow; temp != nullptr; temp = temp->next) {
+		if (temp->row->getColumnValue(colNum) == value) {
+			lastRowNum = rowNum;
+		}
+		rowNum++;
+	}
+	// trebalo bi da je dovoljno
+	if (lastRowNum) {
+		return lastRowNum;
+	}
+	else return -2;
+}
+
+
+
+int TableEditor::countValues(string value, string col_name) {
+	int num = 0;
+	int colNum = this->columns->findColNum(col_name);
+	for (Rows* temp = this->firstRow; temp != nullptr; temp = temp->next) {
+		if (temp->row->getColumnValue(colNum) == value) {
+			num++;
+		}
+	}
+	return num;
+}
+
+
+// ulancana lista za razlicite vrednosti
+struct list {
+	string data;
+	list* next;
+};
+
+// vrace broj razlicitih vrednosti u koloni
+int TableEditor::countDistinctValues(string col_name) {
+	int num = 0;
+	list* head = nullptr;
+	list* last = head;
+	string val = "";
+	bool in = false;
+
+	int colNum = this->columns->findColNum(col_name);
+	for (Rows* temp = this->firstRow; temp != nullptr; temp = temp->next) {
+		in = false;
+		val = temp->row->getColumnValue(colNum);
+
+		// proveravamo da li je val u listi
+		for (list* t = head; t != nullptr; t = t->next) {
+			if (t->data == val) {
+				in = true;
+			}
+		}
+		if (in == false) { // dodajemo ga u listu
+			num++;
+
+			list* newEl = new list();
+			newEl->data = val;
+			newEl->next = nullptr;
+			if (!head) {
+				head = newEl;
+			}
+			else {
+				last->next = newEl;
+			}
+			last = newEl;
+		}
+	}
+	return num;
 }
