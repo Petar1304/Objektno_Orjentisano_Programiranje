@@ -7,26 +7,21 @@ using namespace std;
 
 class Cell {
 public:
-	Cell();
-	
-	Cell(string data);
-	// Dovoljan je obican destruktor
 
+	Cell();
+	// Dovoljan je obican destruktor
+	
+	//Cell(string data);
+	
 	void setData(string data);
 	string getData();
 	void addVal(double val);
 	void mulVal(double val);
 
-	// konverzije u INT i FLOAT
-	int toInt();
-	float toFloat();
-
-
-
-
 private:
 	string data;
 
+	// private methods
 	string showOneDec(string str);
 };
 

@@ -5,12 +5,14 @@
 #include <string>
 using namespace std;
 
+
 // Constructor
 Row::Row() {
 	this->head = nullptr;
 	this->last = nullptr;
 	this->numOfElem = 0;
 }
+
 
 // Destructor
 Row::~Row() {
@@ -19,7 +21,6 @@ Row::~Row() {
 		this->head = this->head->next;
 		delete old->cell;
 		delete old;
-
 	}
 	this->head = this->last = nullptr;
 	this->numOfElem = 0;
@@ -30,9 +31,11 @@ Elem* Row::getRow() {
 	return this->head;
 }
 
+
 Cell* Row::getCell() {
 	return this->head->cell;
 }
+
 
 void Row::setRowHead(Elem* head) {
 	this->head = head;
@@ -61,6 +64,7 @@ void Row::addCell(string data) {
 
 
 
+// brise celiju iz reda
 void Row::deleteCell(int numOfColumn) {
 	// Elem* del = new Elem();
 	Elem* del = nullptr;
@@ -76,19 +80,21 @@ void Row::deleteCell(int numOfColumn) {
 		counter++;
 		last = temp;
 	}
-
+	// delete last;
 	// delete del->cell;
 	delete del;
-	delete last;
 
 	this->numOfElem--;
 }
 
+
+// vraca zadnji red
 Elem* Row::getLastRow() {
 	return this->last;
 }
 
 
+// vraca vrednost kolone broj colNum u datom redu
 string Row::getColumnValue(int colNum) {
 	string val="";
 

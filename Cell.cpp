@@ -3,12 +3,9 @@
 using namespace std;
 
 
+// Konstruktor
 Cell::Cell() {
 	this->data = "";
-}
-
-Cell::Cell(string data) {
-	this->data = data;
 }
 
 
@@ -16,9 +13,11 @@ void Cell::setData(string data) {
 	this->data = data;
 }
 
+
 string Cell::getData() {
 	return this->data;
 }
+
 
 void Cell::addVal(double val) {
     // AKO JE CELIJA PRAZNA NE RADIMO NISTA
@@ -27,21 +26,11 @@ void Cell::addVal(double val) {
     }
 }
 
+
 void Cell::mulVal(double val) {
     if (this->data != "") {
         this->data = showOneDec(to_string(stod(this->data) * val));
     }
-}
-
-
-int Cell::toInt() {
-	// stoi() converts string to int
-	return stoi(this->data);
-}
-
-float Cell::toFloat() {
-	// stof() converts string to float
-	return stof(this->data);
 }
 
 

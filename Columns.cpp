@@ -4,12 +4,14 @@
 #include "Columns.h"
 using namespace std;
 
+
 // Constructor
 Columns::Columns() {
 	this->head = nullptr;
 	this->last = nullptr;
 	this->numOfCols = 0;
 }
+
 
 // Destructor
 Columns::~Columns() {
@@ -21,6 +23,18 @@ Columns::~Columns() {
 	this->head = this->last = nullptr;
 	this->numOfCols= 0;
 }
+
+
+// vraca kolonu
+Column* Columns::getColumn() {
+	return this->head;
+}
+
+
+int Columns::getNumOfCols() {
+	return this->numOfCols;
+}
+
 
 // Add new cell
 void Columns::addColumn(string name, char type) {
@@ -58,19 +72,24 @@ void Columns::deleteColumn(string name) {
 	this->numOfCols--;
 }
 
+
 void Columns::addNumOfCols() {
 	this->numOfCols++;
 }
+
 
 void Columns::subNumOfCols() {
 	this->numOfCols--;
 }
 
+
+// postavlja novu prvu kolonu
 void Columns::setColumnHead(Column* head) {
 	this->head = head;
 }
 
 
+// vraca kolone u formatu za ispis
 string Columns::printColumn() {
 	string data;
 	int i = 0;
@@ -89,16 +108,7 @@ string Columns::printColumn() {
 }
 
 
-Column* Columns::getColumn() {
-	return this->head;
-}
-
-
-int Columns::getNumOfCols() {
-	return this->numOfCols;
-}
-
-
+// vraca broj kolone sa imenom col_name
 int Columns::findColNum(string col_name) {
 	int i = 0;
 	for (Column* temp = this->head; temp != nullptr; temp = temp->next) {
@@ -107,11 +117,11 @@ int Columns::findColNum(string col_name) {
 		}
 		i++;
 	}
-
 	return i;
 }
 
 
+// da li je kolona numerickog tupa
 bool Columns::isColNumType(string col_name) {
 	char t = ' ';
 	for (Column* temp = this->head; temp != nullptr; temp = temp->next) {

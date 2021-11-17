@@ -18,13 +18,17 @@ TableEditor::TableEditor() {
 }
 
 
+// Destruktor
 TableEditor::~TableEditor() {
 	while (this->firstRow != nullptr) {
 		Rows* old = this->firstRow;
 		this->firstRow = this->firstRow->next;
-		
+
 		old->row->~Row();
+		delete old->row;
+		delete old;
 	}
+
 	this->columns->~Columns();
 
 	this->columns = nullptr;
@@ -37,11 +41,12 @@ TableEditor::~TableEditor() {
 }
 
 
+// cita string izmedju zareza
 string TableEditor::readData(string table, int& pos, bool& error) {
 	string data;
 	bool zarez = false;
 	
-	// obraditi moguce greske
+	// pazi na navodnike
 	while (1) {
 		if ((table[pos] == ',' && zarez == false) || table[pos] == '\n') {
 			if (table[pos] != '\n') {
@@ -60,15 +65,20 @@ string TableEditor::readData(string table, int& pos, bool& error) {
 }
 
 
-
+// ucitava zaglavlje
 Columns* TableEditor::readHeader(string table, int& pos, bool& error) {
-	Columns* cols = new Columns();
+	Columns* cols = new Columns(); // zauzimanje memorije
 	char t; // type
 	string d; //data
 	
 	// read first row
 	while (table[pos] != '\n') {
 		t = table[pos];
+		// proveravamo tip kolone
+		if ((t != 't') && (t != 'd') && (t != 'i')) {
+			error = true;
+			break;
+		}
 		pos += 2;
 		d = readData(table, pos, error);
 		cols->addColumn(d, t);
@@ -80,7 +90,6 @@ Columns* TableEditor::readHeader(string table, int& pos, bool& error) {
 
 // Dodavanje reda u tabelu
 void TableEditor::addRow(Row* row) {
-
 	Rows* newRow = new Rows();
 	newRow->row = row;
 	newRow->next = nullptr;
@@ -96,28 +105,40 @@ void TableEditor::addRow(Row* row) {
 }
 
 
-
+// Ucitava tabelu
 int TableEditor::importTable(string table) {
-	
 	int pos = 0;
 	string data;
 	bool error = false;
 
 	this->columns = readHeader(table, pos, error);
-	if (error == true) return -1;
+	if (error == true) {
+		cout << "Greska..." << endl;
+		return -1;
+	}
 
 	// read all rows
 	while (pos < table.length()) {
-
 		Row* row = new Row();
-
-	// ulancana lista za celije u redovima
-	while (table[pos] != '\n') {		
+		
+		int numCells = 0;
+		// ulancana lista za celije u redovima
+		while (table[pos] != '\n') {
+			// ako imamo vise elemenata u redu nego kolona
+			if (numCells > this->columns->getNumOfCols()) {
+				cout << "Greska..." << endl;
+				return this->numRows;
+			}
 			data = readData(table, pos, error);
-			if (error == true) return this->numRows;
+			// vraca neispravan red ako ima greske
+			if (error == true) {
+				cout << "Greska..." << endl;
+				return this->numRows;
+			}
 			row->addCell(data);
+			numCells++;
 		}
-	// ulancana lista za redova
+		// ulancana lista za redova
 		this->addRow(row);	
 		pos++;
 	}
@@ -125,9 +146,9 @@ int TableEditor::importTable(string table) {
 }
 
 
+// vraca tabelu u zadatom formatu
 string TableEditor::exportTable() {
 	string table;
-
 	// add heading
 	table.append(this->columns->printColumn());
 
@@ -142,14 +163,12 @@ string TableEditor::exportTable() {
 		}
 		table.push_back('\n');
 	}
-
 	return table;
 }
 
 
-
+// Selekcija kolone
 void TableEditor::selectColumn(string col_name) {
-	
 	for (Column* temp = this->columns->getColumn(); temp != nullptr; temp = temp->next) {
 		if (temp->name == col_name) {
 			this->selected = temp;
@@ -160,6 +179,7 @@ void TableEditor::selectColumn(string col_name) {
 }
 
 
+// selekcija reda
 void TableEditor::selectRow(int row_position) {
 	int rowNum = 0;
 	for (Rows* temp = this->firstRow; temp != nullptr; temp = temp->next) {
@@ -173,6 +193,8 @@ void TableEditor::selectRow(int row_position) {
 }
 
 
+// proveriti
+// Selekcija celije
 void TableEditor::selectCell(int row_position, string col_name) {
 	int num_col = 0;
 	for (Column* t = this->columns->getColumn(); t != nullptr; t = t->next) {
@@ -182,9 +204,10 @@ void TableEditor::selectCell(int row_position, string col_name) {
 		}
 		num_col++;
 	}
+	// num_col = this->columns->findColNum(col_name);
 
 	int row_num = 0;
-	Elem* row = new Elem();
+	Elem* row = nullptr; // new Elem();
 	for (Rows* temp = this->firstRow; temp != nullptr; temp = temp->next) {
 		if (row_num == row_position) {
 			row = temp->row->getRow();
@@ -196,22 +219,20 @@ void TableEditor::selectCell(int row_position, string col_name) {
 	for (int i = 0; i < num_col; i++) {
 		row = row->next;
 	}
+
 	this->selected = row->cell;
 	this->selectedType = 'c';
 }
 
 
+// brise selekciju
 void TableEditor::deselect() {
 	this->selected = nullptr;
 	this->selectedType = ' ';
 }
 
 
-void* TableEditor::getSelected() {
-	return this->selected;
-}
-
-
+// dodavanje reda pre selektrovanog ili na kraj
 void TableEditor::insertRow() {
 	// creating a new row
 	Rows* newRows = new Rows();
@@ -231,7 +252,7 @@ void TableEditor::insertRow() {
 	if (this->selectedType == 'R') {
 		Rows* selectedRow = (Rows*)this->selected;
 		// find row before selected row
-		Rows* previousRow = new Rows();
+		Rows* previousRow = selectedRow; // new Rows();
 
 		for (Rows* t = this->firstRow; t != nullptr; t = t->next) {
 			if (t->next == selectedRow) {
@@ -253,9 +274,10 @@ void TableEditor::insertRow() {
 }
 
 
-
+// pregledati jos
+// dodavanje nove kolone
 void TableEditor::insertColumn(string col_name, Type type) {
-	char t = ' ';
+	char t;
 	string data;
 
 	switch (type) {
@@ -278,7 +300,7 @@ void TableEditor::insertColumn(string col_name, Type type) {
 
 		Column* selectedCol = (Column*)this->selected;
 		// find column before selected column
-		Column* previousCol = new Column();
+		Column* previousCol = nullptr; // new Column();
 		int colNum = 0;
 
 		// ne radi
@@ -286,6 +308,7 @@ void TableEditor::insertColumn(string col_name, Type type) {
 		if (selectedCol != this->columns->getColumn()) {
 
 			for (Column* tempCol = this->columns->getColumn(); tempCol != nullptr; tempCol = tempCol->next) {
+				// nalazimo prethodnu kolonu
 				if (tempCol->next == selectedCol) {
 					previousCol = tempCol;
 					break;
@@ -305,7 +328,7 @@ void TableEditor::insertColumn(string col_name, Type type) {
 			// popunjavanje svih celija
 			for (Rows* temp = this->firstRow; temp != nullptr; temp = temp->next) {
 				Elem* current = temp->row->getRow();
-				Elem* last = new Elem();
+				Elem* last = current; // new Elem();
 				Elem* newEl = new Elem();
 				Cell* newCell = new Cell();
 				newCell->setData(data);
@@ -327,6 +350,7 @@ void TableEditor::insertColumn(string col_name, Type type) {
 			newCol->name = col_name;
 			newCol->type = t;
 			newCol->next = this->columns->getColumn();
+			// postavlja novu prvu kolonu
 			this->columns->setColumnHead(newCol);
 			this->columns->addNumOfCols();
 			
@@ -347,7 +371,7 @@ void TableEditor::insertColumn(string col_name, Type type) {
 		this->columns->addColumn(col_name, t);
 		for (Rows* temp = this->firstRow; temp != nullptr; temp = temp->next) {
 
-			Elem* lastEl = new Elem();
+			Elem* lastEl = nullptr; // new Elem();
 			Elem* newEl = new Elem();
 			Cell *newCell = new Cell();
 			newCell->setData(data);
@@ -360,15 +384,6 @@ void TableEditor::insertColumn(string col_name, Type type) {
 		}
 	}
 }
-
-
-
-// debugging
-void TableEditor::printSelected() {
-	Cell* cell = (Cell*)this->selected;
-	cout << cell->getData() << endl;
-}
-
 
 
 // Menja sadrzaj selektovane celije
@@ -384,7 +399,7 @@ void TableEditor::editCellValue() {
 }
 
 
-// Radi
+// Brise vrednost celije kolone ili reda
 void TableEditor::deleteContent() {
 	// ako je selektovana celija -> brisemo njenu vrednost
 	if (this->selectedType == 'c') {
@@ -393,11 +408,10 @@ void TableEditor::deleteContent() {
 	}
 
 
-
 	// Ako je selektovan red -> brisemo taj red 
 	else if (this->selectedType == 'R') {
 		Rows* row = (Rows*)this->selected;
-		Rows* previousRow = new Rows(); // change maybe
+		Rows* previousRow = row; // change maybe
 
 		if (row != this->firstRow) {
 			for (Rows* temp = this->firstRow; temp != nullptr; temp = temp->next) {
@@ -423,7 +437,7 @@ void TableEditor::deleteContent() {
 	else if (this->selectedType == 'C') {
 		int colNum = 0;
 		Column* col = (Column*)this->selected;
-		Column* previous = new Column();
+		Column* previous = col; // new Column();
 		// ako nije prva kolona
 		if (col != this->columns->getColumn()) {
 			for (Column* temp = this->columns->getColumn(); temp != nullptr; temp = temp->next) {
@@ -547,12 +561,8 @@ void TableEditor::mul(double value) {
 
 
 
-
-
 // sortirati sve kao string, dobice se tacni rezultati
 void TableEditor::sortByValue(string col_name, bool asc) {
-	// asc = true (>)
-	// asc = false (<)
 
 	// bubble sort 
 		int colNum = this->columns->findColNum(col_name);
@@ -584,7 +594,7 @@ void TableEditor::sortByValue(string col_name, bool asc) {
 }
 
 
-
+// poredi vrednosti po svim kriterijumima
 bool TableEditor::compareVals(string v1, string v2, bool numeric,bool asc) {
 	double val1, val2;
 	if (numeric) {
@@ -630,8 +640,6 @@ bool TableEditor::compareVals(string v1, string v2, bool numeric,bool asc) {
 }
 
 
-
-
 // prvo pojavljivanje value u koloni
 int TableEditor::findFirstOf(string value, string col_name) {
 	int rowNum = 0;
@@ -666,7 +674,7 @@ int TableEditor::findLastOf(string value, string col_name) {
 }
 
 
-
+// Vraca broj pojavljivanja value u koloni
 int TableEditor::countValues(string value, string col_name) {
 	int num = 0;
 	int colNum = this->columns->findColNum(col_name);
@@ -679,11 +687,13 @@ int TableEditor::countValues(string value, string col_name) {
 }
 
 
+
 // ulancana lista za razlicite vrednosti
 struct list {
 	string data;
 	list* next;
 };
+
 
 // vrace broj razlicitih vrednosti u koloni
 int TableEditor::countDistinctValues(string col_name) {
@@ -704,7 +714,8 @@ int TableEditor::countDistinctValues(string col_name) {
 				in = true;
 			}
 		}
-		if (in == false) { // dodajemo ga u listu
+		// ako nije dodajemo ga u listu
+		if (in == false) { 
 			num++;
 
 			list* newEl = new list();
@@ -718,6 +729,12 @@ int TableEditor::countDistinctValues(string col_name) {
 			}
 			last = newEl;
 		}
+	}
+	// brisanje liste
+	while (head) {
+		last = head;
+		head = head->next;
+		delete last;
 	}
 	return num;
 }
